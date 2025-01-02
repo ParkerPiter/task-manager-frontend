@@ -17,11 +17,26 @@ export const DELETE_TASK_SUCCESS = 'DELETE_TASK_SUCCESS';
 export const DELETE_TASK_FAILURE = 'DELETE_TASK_FAILURE';
 export const SET_FILTER = 'SET_FILTER';
 
+const tryRequest = async (remoteUrl, localUrl, options) => {
+  try {
+    const response = await axios(remoteUrl, options);
+    return response;
+  } catch (error) {
+    console.error(`Error with remote URL: ${error.message}. Trying local URL...`);
+    const response = await axios(localUrl, options);
+    return response;
+  }
+};
+
 export const fetchTasks = () => async (dispatch) => {
     dispatch({ type: FETCH_TASKS_REQUEST });
     try {
-        const { data } = await axios.get('https://task-manager-vb4x.onrender.com/api/tasks');
-        dispatch({ type: FETCH_TASKS_SUCCESS, payload: data });
+      const response = await tryRequest(
+        'https://task-manager-vb4x.onrender.com/api/tasks',
+        'http://localhost:3001/api/tasks',
+        { method: 'get' }
+      );
+        dispatch({ type: FETCH_TASKS_SUCCESS, payload: response.data });
     } 
     catch (error) {
         dispatch({ type: FETCH_TASKS_FAILURE, payload: error });
@@ -31,7 +46,11 @@ export const fetchTasks = () => async (dispatch) => {
 export const fetchTaskDetail = (id) => async (dispatch) => {
     dispatch({ type: FETCH_TASK_DETAIL_REQUEST });
     try {
-      const response = await axios.get(`https://task-manager-vb4x.onrender.com/api/tasks/${id}`);
+      const response = await tryRequest(
+        `https://task-manager-vb4x.onrender.com/api/tasks/${id}`,
+        `http://localhost:3001/api/tasks/${id}`,
+        { method: 'get' }
+      );
       dispatch({ type: FETCH_TASK_DETAIL_SUCCESS, payload: response.data });
     } catch (error) {
       dispatch({ type: FETCH_TASK_DETAIL_FAILURE, payload: error.message });
@@ -41,7 +60,11 @@ export const fetchTaskDetail = (id) => async (dispatch) => {
 export const createTask = (task) => async (dispatch) => {
   dispatch({ type: CREATE_TASK_REQUEST });
   try {
-    const response = await axios.post('https://task-manager-vb4x.onrender.com/api/tasks', task);
+    const response = await tryRequest(
+      'https://task-manager-vb4x.onrender.com/api/tasks',
+      'http://localhost:3001/api/tasks',
+      { method: 'post', data: task }
+    );
     dispatch({ type: CREATE_TASK_SUCCESS, payload: response.data });
     dispatch(fetchTasks());
   } catch (error) {
@@ -52,7 +75,11 @@ export const createTask = (task) => async (dispatch) => {
 export const updateTask = (task) => async (dispatch) => {
   dispatch({ type: UPDATE_TASK_REQUEST });
   try {
-    const response = await axios.put(`https://task-manager-vb4x.onrender.com/api/tasks/${task.id}`, task);
+    const response = await tryRequest(
+      `https://task-manager-vb4x.onrender.com/api/tasks/${task.id}`,
+      `http://localhost:3001/api/tasks/${task.id}`,
+      { method: 'put', data: task }
+    );
     dispatch({ type: UPDATE_TASK_SUCCESS, payload: response.data });
   } catch (error) {
     dispatch({ type: UPDATE_TASK_FAILURE, payload: error.message });
@@ -62,7 +89,11 @@ export const updateTask = (task) => async (dispatch) => {
 export const deleteTask = (id) => async (dispatch) => {
   dispatch({ type: DELETE_TASK_REQUEST });
   try {
-    await axios.delete(`https://task-manager-vb4x.onrender.com/api/tasks/${id}`);
+    const response = await tryRequest(
+      `https://task-manager-vb4x.onrender.com/api/tasks/${id}`,
+      `http://localhost:3001/api/tasks/${id}`,
+      { method: 'delete' }
+    );
     dispatch({ type: DELETE_TASK_SUCCESS, payload: id });
     dispatch(fetchTasks());
   } catch (error) {
